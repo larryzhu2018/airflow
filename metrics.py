@@ -119,20 +119,17 @@ dag = DAG('log_metrics', description='Log Metrics DAG',
           start_date=datetime(2019, 12, 20), catchup=False)
 
 start_task = DummyOperator(
-                task_id='start_task',
-                dag=dag,
-                )
+    task_id='start_task',
+    dag=dag,
+)
 end_task = DummyOperator(
-                task_id='end_task',
-                dag=dag,
-                )
+    task_id='end_task',
+    dag=dag,
+)
 for helk_tag in get_helk_tags():
     task = PythonOperator(
         task_id='load_index_for_' + helk_tag,
-        python_callable=load_all_op,
+        python_callable=load_by_tag_op,
         op_kwargs={'helk_tag': helk_tag},
         dag=dag,
     )
-
-    start_task >> task
-    task >> end_task
