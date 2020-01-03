@@ -136,3 +136,4 @@ for helk_tag in get_helk_tags():
         dag=dag,
     )
     task >> end_task
+    start_task >> task
