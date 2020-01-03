@@ -133,3 +133,4 @@ for helk_tag in get_helk_tags():
         op_kwargs={'helk_tag': helk_tag},
         dag=dag,
     )
+    task >> end_task
