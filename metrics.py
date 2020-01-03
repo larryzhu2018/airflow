@@ -49,7 +49,7 @@ def get_helk_tags():
             if not total_hits:
                 print(f"{tag} not done yet no {log_tag}")
                 continue
-            list.append(tag)
+            lst.append(tag)
         except Exception as e:
             traceback.print_exc()
             print(f"[{datetime.now()}] main_for_load_and_aggregate failed for {tag} : {str(e)}")
