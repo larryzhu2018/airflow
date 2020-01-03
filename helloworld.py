@@ -6,7 +6,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import PythonOperator
 
 def print_hello():
-    return f"Hello world! from {socket.gethostname()} {os.getenv('HOSTNAME')}"
+    return f"Hello world! from_host {socket.gethostname()} {os.getenv('HOSTNAME')}"
 
 dag = DAG('hello_world', description='Simple HellowWorld Test DAG',
           schedule_interval='*/5 * * * *',
