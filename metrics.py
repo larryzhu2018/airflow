@@ -111,7 +111,7 @@ def load_and_aggregate(tag):
     print(f"[{datetime.now()}] load_and_aggregate done_{tag}")
 
 
-def load_by_tag_op(ds, **kwargs):
+def load_by_tag_op(**kwargs):
     helk_tag = kwargs['helk_tag']
     load_and_aggregate(helk_tag)
 
