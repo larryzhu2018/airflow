@@ -129,10 +129,16 @@ end_task = DummyOperator(
     dag=dag,
 )
 tags = get_helk_tags()
-start_task >> data_task
+
 chain_end_task = True
 for helk_tag in tags:
-    chain_end_task = False
+    if chain_end_task:
+        data_task = DummyOperator(
+            task_id='data_task',
+            dag=dag,
+        )
+        start_task >> data_task
+        chain_end_task = False
     print(f"[{datetime.now()}] load_and_aggregate start_{helk_tag}")
     task = PythonOperator(
         task_id='load_index_for_' + helk_tag,
@@ -140,6 +146,6 @@ for helk_tag in tags:
         op_kwargs={'helk_tag': helk_tag},
         dag=dag,
     )
-    start_task >> task >> end_task
+    data_task >> task >> end_task
 if chain_end_task:
     start_task >> end_task
