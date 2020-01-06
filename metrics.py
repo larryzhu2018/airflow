@@ -10,9 +10,10 @@ from airflow import DAG
 url = "http://dev-iad-cluster-ingest.controltower:9200"
 # url = "http://localhost:9201"  # devtest
 
+dag_instance_tag = f"{datetime.now().strftime('%m%d%Y%H%M%S')}"
 
 def get_helk_tags():
-    global url
+    global url, dag_instance_tag
     print(f"[{datetime.now()}] main_for_load_and_aggregate started")
     client = Elasticsearch(
         url,
@@ -29,7 +30,7 @@ def get_helk_tags():
     for i in range(len(buckets)):
         tag = buckets[i]['key']
         try:
-            print(f"[{datetime.now()}] main_for_load_and_aggregate checking {tag}")
+            print(f"[{dag_instance_tag}][{datetime.now()}] main_for_load_and_aggregate checking {tag}")
             s = Search(using=client, index="counthosts-*")
             s = s.filter("range", ** {"@timestamp": {"gte": "now-30d"}})
             s = s.filter('term', type='counthosts')
@@ -37,7 +38,7 @@ def get_helk_tags():
             data = s.execute()
             total_hits = int(data['hits']['total']['value'])
             if total_hits:
-                print(f"[{datetime.now()}] skipping {tag} already processed")
+                print(f"[{dag_instance_tag}][{datetime.now()}] skipping {tag} already processed")
                 continue
             s = Search(using=client, index="clusterlog-*")
             s = s.filter("range", ** {"@timestamp": {"gte": "now-30d"}})
@@ -46,20 +47,20 @@ def get_helk_tags():
             s = s.query('match', message=log_tag)
             data = s.execute()
             total_hits = int(data['hits']['total']['value'])
-            print(f"[{datetime.now()}] main_for_load_and_aggregate {log_tag} total hits {total_hits}")
+            print(f"[{dag_instance_tag}][{datetime.now()}] main_for_load_and_aggregate {log_tag} total hits {total_hits}")
             if not total_hits:
                 print(f"{tag} not done yet no {log_tag}")
                 continue
             lst.append(tag)
         except Exception as e:
             traceback.print_exc()
-            print(f"[{datetime.now()}] main_for_load_and_aggregate failed for {tag} : {str(e)}")
+            print(f"[{dag_instance_tag}][{datetime.now()}] main_for_load_and_aggregate failed for {tag} : {str(e)}")
     return lst
 
 
 def load_and_aggregate(tag):
-    global url
-    print(f"[{datetime.now()}] load_and_aggregate load_{tag}")
+    global url, dag_instance_tag
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate load_{tag}")
     client = Elasticsearch(
         url,
         timeout=2000)
@@ -83,7 +84,7 @@ def load_and_aggregate(tag):
         if (host_id, file_source) not in all_hosts:
             all_hosts[host_id, file_source] = hit.to_dict()
     for file_source in all_file_sources:
-        print(f"[{datetime.now()}] load_and_aggregate uploading counts {tag} for {file_source}")
+        print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploading counts {tag} for {file_source}")
         post_data = []
         for host_id in counts:
             if (host_id, file_source) not in all_hosts:
@@ -95,9 +96,9 @@ def load_and_aggregate(tag):
             data['_index'] = 'counthosts-000001'
             post_data.append(data)
         helpers.bulk(client, post_data)
-        print(f"[{datetime.now()}] load_and_aggregate uploaded_{tag} {len(post_data)} for {file_source}")
+        print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploaded_{tag} {len(post_data)} for {file_source}")
 
-    print(f"[{datetime.now()}] load_and_aggregate uploading counts {tag}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploading counts {tag}")
     post_data = []
     for host_id in counts:
         data = all_hosts[host_id]
@@ -107,8 +108,8 @@ def load_and_aggregate(tag):
         data['_index'] = 'counthosts-000001'
         post_data.append(data)
     helpers.bulk(client, post_data)
-    print(f"[{datetime.now()}] load_and_aggregate uploaded_{tag} {len(post_data)}")
-    print(f"[{datetime.now()}] load_and_aggregate done_{tag}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploaded_{tag} {len(post_data)}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate done_{tag}")
 
 
 def load_by_tag_op(**kwargs):
@@ -139,7 +140,7 @@ for helk_tag in tags:
         )
         start_task >> data_task
         chain_end_task = False
-    print(f"[{datetime.now()}] load_and_aggregate start_{helk_tag}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate start_{helk_tag}")
     task = PythonOperator(
         task_id='load_index_for_' + helk_tag,
         python_callable=load_by_tag_op,
