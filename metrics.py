@@ -149,6 +149,6 @@ for helk_tag in tags:
         op_kwargs={'helk_tag': helk_tag},
         dag=dag,
     )
-    data_task >> task >> end_task
+    start_task >> data_task >> task >> end_task
 if chain_end_task:
     start_task >> end_task
