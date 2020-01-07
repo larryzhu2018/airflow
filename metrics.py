@@ -10,7 +10,7 @@ from airflow import DAG
 url = "http://dev-iad-cluster-ingest.controltower:9200"
 # url = "http://localhost:9201"  # devtest
 
-dag_instance_tag = f"{datetime.now().strftime('%m%d%Y%H%M%S')}"
+dag_instance_tag = f"{datetime.now().strftime('%m%d%Y%H%M')}"
 
 def get_helk_tags():
     global url, dag_instance_tag
@@ -60,7 +60,7 @@ def get_helk_tags():
 
 def load_and_aggregate(tag):
     global url, dag_instance_tag
-    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate load_{tag}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate load {tag}")
     client = Elasticsearch(
         url,
         timeout=2000)
@@ -96,7 +96,7 @@ def load_and_aggregate(tag):
             data['_index'] = 'counthosts-000001'
             post_data.append(data)
         helpers.bulk(client, post_data)
-        print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploaded_{tag} {len(post_data)} for {file_source}")
+        print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploaded {tag} {len(post_data)} for {file_source}")
 
     print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploading counts {tag}")
     post_data = []
@@ -108,8 +108,8 @@ def load_and_aggregate(tag):
         data['_index'] = 'counthosts-000001'
         post_data.append(data)
     helpers.bulk(client, post_data)
-    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploaded_{tag} {len(post_data)}")
-    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate done_{tag}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate uploaded {tag} {len(post_data)}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate done {tag}")
 
 
 def load_by_tag_op(**kwargs):
@@ -140,7 +140,7 @@ for helk_tag in tags:
         )
         start_task >> data_task
         chain_end_task = False
-    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate start_{helk_tag}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate {helk_tag}")
     task = PythonOperator(
         task_id='load_index_for_' + helk_tag,
         python_callable=load_by_tag_op,
