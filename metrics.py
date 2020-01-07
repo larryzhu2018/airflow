@@ -61,6 +61,8 @@ def get_helk_tags():
 def load_and_aggregate(tag):
     global url, dag_instance_tag
     print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate load {tag}")
+    print(f"[{dag_instance_tag}][{datetime.now()}] load_and_aggregate debug exit")
+    return
     client = Elasticsearch(
         url,
         timeout=2000)
