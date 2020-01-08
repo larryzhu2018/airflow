@@ -4,7 +4,7 @@ from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
 from elasticsearch_dsl import Search, A
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators import PythonOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow import DAG
 
 url = "http://dev-iad-cluster-ingest.controltower:9200"
